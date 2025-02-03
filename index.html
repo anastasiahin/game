@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avoid The Blocks</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <style>
+        body { margin: 0; text-align: center; background: #eee; }
+        canvas { display: block; margin: auto; }
+    </style>
+</head>
+<body>
+    <script>
+        const config = {
+            type: Phaser.AUTO,
+            width: 1000,
+            height: 700,
+            physics: {
+                default: 'arcade',
+                arcade: { gravity: { y: 0 }, debug: false }
+            },
+            scene: { preload, create, update }
+        };
+
+        let player, cursors, blocks, score = 0, scoreText;
+        let bestScore = 0, bestPlayer = "No Name";
+
+        const game = new Phaser.Game(config);
+
+        function preload() {
+            this.load.image('block', 'https://via.placeholder.com/30'); // Можна замінити на свій спрайт
+        }
+
+        function create() {
+            player = this.add.rectangle(500, 650, 30, 30, 0x6A0DAD);
+            this.physics.add.existing(player);
+            player.body.setCollideWorldBounds(true);
+
+            blocks = this.physics.add.group();
+
+            cursors = this.input.keyboard.createCursorKeys();
+
+            scoreText = this.add.text(20, 20, 'Score: 0', { fontSize: '20px', fill: '#000' });
+
+            this.physics.add.collider(player, blocks, () => gameOver(this));
+
+            this.time.addEvent({ delay: 500, callback: spawnBlock, callbackScope: this, loop: true });
+        }
+
+        function update() {
+            if (cursors.left.isDown) player.x -= 6;
+            if (cursors.right.isDown) player.x += 6;
+        }
+
+        function spawnBlock() {
+            let block = this.physics.add.image(Phaser.Math.Between(0, 970), 0, 'block');
+            block.setVelocityY(150 + score * 5);
+            blocks.add(block);
+
+            this.time.delayedCall(3000, () => {
+                if (block.y > 700) {
+                    block.destroy();
+                    score++;
+                    scoreText.setText('Score: ' + score);
+                }
+            });
+        }
+
+        function gameOver(scene) {
+            scene.physics.pause();
+            let playerName = prompt("Введіть своє ім'я:");
+            if (playerName && score > bestScore) {
+                bestScore = score;
+                bestPlayer = playerName;
+                alert(`Новий рекорд! ${bestPlayer} - ${bestScore} очок!`);
+            }
+            alert("Game Over! Натисни F5, щоб перезапустити.");
+        }
+    </script>
+</body>
+</html>
